@@ -62,6 +62,7 @@ import com.example.chatify.ChatViewModel
 import com.example.chatify.Message
 import com.example.chatify.MessageStatus
 import com.example.chatify.R
+import com.example.chatify.decodeBase64ToBitmap
 import com.example.chatify.ui.theme.Lavender
 import com.example.chatify.ui.theme.LightLavender
 import com.example.chatify.ui.theme.RichCharcoal
@@ -87,7 +88,7 @@ fun ChatDetailScreen(
     var messageText by remember { mutableStateOf("") }
 
     val defaultBitmap = ImageBitmap.imageResource(R.drawable.profile_placeholder).asAndroidBitmap()
-    val profileBitmap = profileString?.let { viewModel.decodeBase64ToBitmap(it) } ?: defaultBitmap
+    val profileBitmap = profileString?.let { decodeBase64ToBitmap(it) } ?: defaultBitmap
 
     if (receiverPhoneNo != null) {
         viewModel.loadMessages(receiverPhoneNo) {

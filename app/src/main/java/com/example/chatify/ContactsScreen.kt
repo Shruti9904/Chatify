@@ -126,7 +126,7 @@ fun ContactsScreen(
             items(allUsers.size) { index ->
                 val user = allUsers[index]
                 val profileBitmap =
-                    user.profileImage?.let { viewModel.decodeBase64ToBitmap(it) } ?: defaultBitmap
+                    user.profileImage?.let { decodeBase64ToBitmap(it) } ?: defaultBitmap
                 SingleContactItem(user, profileBitmap,currentUserId){
                     navController.navigate(Screen.ChatDetailScreen.createRoute(user.userId))
                 }

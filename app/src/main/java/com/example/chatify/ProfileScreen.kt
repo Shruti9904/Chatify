@@ -1,50 +1,60 @@
 package com.example.chatify
 
-import android.graphics.Bitmap
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.chatify.ui.theme.DeepLavender
-import com.example.chatify.ui.theme.DuskyIndigo
-import com.example.chatify.ui.theme.DustyViolet
+import androidx.navigation.NavController
 import com.example.chatify.ui.theme.Lavender
-import com.example.chatify.ui.theme.RichCharcoal
 import com.example.chatify.ui.theme.SoftLilac
-import com.example.chatify.ui.theme.TwilightPlum
+import com.example.chatify.ui.theme.SoftMauve
+import java.util.Locale
 
 @Composable
-fun ProfileScreen(){
-    val phoneAuthViewModel : PhoneAuthViewModel = hiltViewModel()
-    var userProfile = phoneAuthViewModel.userProfile
+fun ProfileScreen(navController: NavController) {
+    val userProfileViewModel: UserProfileViewModel = hiltViewModel()
+    val phoneAuthViewModel: PhoneAuthViewModel = hiltViewModel()
+    var userProfile = userProfileViewModel.userProfile
+
+    var editingLabel by remember { mutableStateOf<String?>(null) }
+
 
     LaunchedEffect(Unit) {
-        userProfile = phoneAuthViewModel.userProfile
+        userProfile = userProfileViewModel.userProfile
     }
 
     if (userProfile == null) {
@@ -54,66 +64,175 @@ fun ProfileScreen(){
         return
     }
 
-    val defaultBitmap = ImageBitmap.imageResource(R.drawable.profile_placeholder)
-    val profileBitmap = userProfile?.profileImage?.let { phoneAuthViewModel.decodeBase64ToBitmap(it) }
+    val profileBitmap = userProfile?.profileImage?.let { decodeBase64ToBitmap(it) }
 
-    Column (
-        modifier = Modifier.fillMaxSize().background(SoftLilac)
-    ){
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(SoftLilac),
+    ) {
 
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.35f)
-                .background(DeepLavender),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .background(Color.Gray)
+                .padding(vertical = 20.dp),
+            contentAlignment = Alignment.Center
         ) {
-            Image(
-                bitmap = profileBitmap?.asImageBitmap() ?: defaultBitmap,
-                contentDescription = null,
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .size(120.dp)
-                    .border(2.dp, RichCharcoal, CircleShape),
-                contentScale = ContentScale.Crop
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = userProfile?.name ?: "",
-                color = Color.White,
-//                fontWeight = FontWeight.Bold,
-                fontSize = 22.sp,
-                letterSpacing = 1.sp
-            )
+            EditableProfileImage(
+                initialBitmap = profileBitmap
+            ) {bitmap->
+                val encodedImage = convertBitmapToBase64(bitmap)
+                userProfileViewModel.updateUserProfile(ProfileUpdateType.PROFILE_IMAGE,encodedImage)
+            }
         }
-//        Column(
-//            modifier = Modifier.fillMaxWidth().fillMaxHeight(0.4f).background(CoralAccent),
-//            horizontalAlignment = Alignment.CenterHorizontally,
-//            verticalArrangement = Arrangement.Center
-//        ){
-//            Image(
-//                bitmap = profileBitmap?.asImageBitmap() ?: defaultBitmap,
-//                contentDescription = null,
-//                modifier = Modifier
-//                    .clip(CircleShape)
-//                    .size(120.dp),
-//                contentScale = ContentScale.Crop
-//            )
-//            Spacer(modifier = Modifier.height(16.dp))
-//            Text(text = userProfile?.name ?:"",
-//                color = DarkBackground,
-//                fontWeight = FontWeight.Bold,
-//                fontSize = 22.sp,
-//                letterSpacing = 1.sp
-//            )
-//            Spacer(modifier = Modifier.height(4.dp))
-//            Text(text = userProfile?.phoneNo ?:"",
-//                color = DeepLavender,
-//                fontSize = 14.sp,
-//            )
-//        }
 
+        Spacer(modifier = Modifier.height(16.dp))
+        ProfileInfoItem(
+            label = ProfileUpdateType.NAME.name,
+            text = userProfile!!.name,
+            isEditing = editingLabel == ProfileUpdateType.NAME.name,
+            onEditClick = { editingLabel = ProfileUpdateType.NAME.name },
+            onDone = {
+                userProfileViewModel.updateUserProfile(ProfileUpdateType.NAME, it)
+                editingLabel = null
+            }
+        )
+
+        ProfileInfoItem(
+            label = ProfileUpdateType.STATUS.name,
+            text = userProfile!!.status ?: "Hey there! I am using Chatify",
+            isEditing = editingLabel == ProfileUpdateType.STATUS.name,
+            onEditClick = { editingLabel = ProfileUpdateType.STATUS.name },
+            onDone = {
+                userProfileViewModel.updateUserProfile(ProfileUpdateType.STATUS, it)
+                editingLabel = null
+            }
+        )
+        ProfileInfoItem(
+            label = ProfileUpdateType.PHONE.name,
+            text = userProfile!!.phoneNo,
+            isEditing = false,
+            onEditClick = { },
+            onDone = {
+                editingLabel = null
+            }
+        )
+
+        Button(
+            onClick = {
+                phoneAuthViewModel.signOut()
+                navController.navigate(Screen.AuthScreen.route) {
+                    popUpTo(Screen.HomeScreen.route) {
+                        inclusive = true
+                    }
+                }
+            },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.DarkGray,
+                contentColor = Color.White
+            ),
+            modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp)
+        ) {
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Logout,
+                    contentDescription = "logout",
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(text = "Logout", fontSize = 14.sp)
+
+            }
+
+        }
+
+
+    }
+}
+
+@Composable
+fun ProfileInfoItem(
+    label: String,
+    text: String,
+    isEditing: Boolean,
+    onEditClick: () -> Unit,
+    onDone: (String) -> Unit
+) {
+    var editedText by remember { mutableStateOf(text) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 18.dp, end = 18.dp, top = 16.dp, bottom = 8.dp),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 8.dp)
+                .clickable { onEditClick() },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (isEditing) {
+                TextField(
+                    value = editedText,
+                    onValueChange = { editedText = it },
+                    modifier = Modifier
+                        .padding(end = 16.dp)
+                        .fillMaxWidth(0.9f),
+                    label = { Text(text = label) },
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedLabelColor = Lavender,
+                        unfocusedLabelColor = Lavender
+                    )
+                )
+                Icon(
+                    imageVector = Icons.Default.Done,
+                    contentDescription = "Done",
+                    tint = Color.Black,
+                    modifier = Modifier
+                        .clickable {
+                            onDone(editedText)
+                        }
+                        .size(28.dp)
+                )
+            } else {
+                Box(modifier = Modifier.weight(0.3f).padding(start = 8.dp, end = 4.dp)) {
+                    Text(
+                        text = label.uppercase(Locale.ROOT),
+                        color = Color.Gray,
+                        fontSize = 14.sp
+                    )
+                }
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Text(
+                        text = text,
+                        color = Color.Black,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+        HorizontalDivider(color = SoftMauve, thickness = 1.5.dp)
     }
 }

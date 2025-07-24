@@ -160,14 +160,6 @@ class PhoneAuthViewModel @Inject constructor(
         })
     }
 
-    //Base64 turns binary data into text format, which can be saved in Firebase as a simple string.
-    private fun convertBitmapToBase64(bitmap: Bitmap): String {
-        val byteArrayOutputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
-        val byteArray = byteArrayOutputStream.toByteArray()
-        return Base64.encodeToString(byteArray, Base64.DEFAULT)
-    }
-
     fun saveUserProfile(name: String, bitmap: Bitmap, status: String) {
         val userId = auth.currentUser?.uid
         if (userId == null) {
@@ -202,15 +194,6 @@ class PhoneAuthViewModel @Inject constructor(
         preferencesManager.saveBoolean(IS_LOGGED_IN, false)
         preferencesManager.saveString(USER_ID,"")
         _authState.value = AuthState.Ideal
-    }
-
-    fun decodeBase64ToBitmap(base64Image: String): Bitmap? {
-        return try {
-            val decodedByte = Base64.decode(base64Image, Base64.DEFAULT)
-            BitmapFactory.decodeByteArray(decodedByte, 0, decodedByte.size)
-        } catch (e: Exception) {
-            null
-        }
     }
 }
 

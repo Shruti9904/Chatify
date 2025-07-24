@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,8 +18,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,7 +31,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -48,14 +44,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.chatify.Chat
 import com.example.chatify.ChatViewModel
-import com.example.chatify.PhoneAuthViewModel
 import com.example.chatify.R
 import com.example.chatify.Screen
+import com.example.chatify.decodeBase64ToBitmap
 import com.example.chatify.ui.theme.CoralAccent
 import com.example.chatify.ui.theme.Lavender
 import com.example.chatify.ui.theme.LightLavender
@@ -68,47 +62,47 @@ fun ChatsScreen(viewModel: ChatViewModel, navController: NavController) {
     val defaultBitmap = ImageBitmap.imageResource(R.drawable.profile_placeholder).asAndroidBitmap()
     val searchedChat = viewModel.searchedChat
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize().background(SoftLilac)
-    ) {
-        if (searchedChat != null) {
-            val profileBitmap =
-                searchedChat.profile?.let { viewModel.decodeBase64ToBitmap(it) } ?: defaultBitmap
-            item {
-                SingleChatItem(searchedChat, profileBitmap,viewModel) {
-                    navController.navigate(Screen.ChatDetailScreen.route)
-                }
-            }
-        } else {
-
-            items(chats.size) { index ->
-                val chat = chats[index]
+    if(chats.isEmpty()){
+        Box(
+            modifier=Modifier.fillMaxSize().background(SoftLilac),
+            contentAlignment = Alignment.Center
+        ){
+            Text(text="No chats yet.\n Start a conversation to see it here!",
+                textAlign = TextAlign.Center,
+                color = RichCharcoal)
+        }
+    }else{
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().background(SoftLilac)
+        ) {
+            if (searchedChat != null) {
                 val profileBitmap =
-                    chat.profile?.let { viewModel.decodeBase64ToBitmap(it) } ?: defaultBitmap
-                SingleChatItem(chat, profileBitmap,viewModel) {
-                    chat.userId?.let {
-                        navController.navigate(Screen.ChatDetailScreen.createRoute(chat.userId))
+                    searchedChat.profile?.let { decodeBase64ToBitmap(it) } ?: defaultBitmap
+                item {
+                    SingleChatItem(searchedChat, profileBitmap,viewModel) {
+                        navController.navigate(Screen.ChatDetailScreen.route)
+                    }
+                }
+            } else {
+
+                items(chats.size) { index ->
+                    val chat = chats[index]
+                    val profileBitmap =
+                        chat.profile?.let { decodeBase64ToBitmap(it) } ?: defaultBitmap
+                    SingleChatItem(chat, profileBitmap,viewModel) {
+                        chat.userId?.let {
+                            navController.navigate(Screen.ChatDetailScreen.createRoute(chat.userId))
+                        }
                     }
                 }
             }
-        }
 
+        }
     }
 
+
+
 }
-
-
-//item {
-//    Button(onClick = {
-//        phoneAuthViewModel.signOut()
-//        navController.navigate(Screen.AuthScreen.route) {
-//            popUpTo(Screen.HomeScreen.route) { inclusive = true }
-//        }
-//    }) {
-//        Text(text = "Sign out")
-//    }
-//}
-
 
 @Composable
 fun SingleChatItem(chat: Chat, bitmap: Bitmap, chatViewModel: ChatViewModel, onChatClick: () -> Unit) {

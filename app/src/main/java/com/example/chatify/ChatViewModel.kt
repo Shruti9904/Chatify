@@ -1,8 +1,5 @@
 package com.example.chatify
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.util.Base64
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -10,7 +7,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -22,7 +18,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -114,7 +109,7 @@ class ChatViewModel @Inject constructor(
 
     // Search a user by phone number
     fun searchUserByPhoneNo(phoneNo: String) {
-        if(currentUserId==null) return
+        if (currentUserId == null) return
         usersRef.orderByChild("phoneNo").equalTo(phoneNo)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
@@ -154,7 +149,7 @@ class ChatViewModel @Inject constructor(
                 timestamp = System.currentTimeMillis()
             )
 
-            if(senderId!=receiverId){
+            if (senderId != receiverId) {
                 messagesRef.child(receiverId).child(senderId).push().setValue(message)
             }
             messagesRef.child(senderId).child(receiverId).push().setValue(message)
@@ -162,17 +157,18 @@ class ChatViewModel @Inject constructor(
     }
 
 
-    fun markMessagesAsDelivered(receiverId:String?){
+    fun markMessagesAsDelivered(receiverId: String?) {
         val senderId = currentUserId ?: return
-        if(receiverId==null) return
-        Log.d("Status","Marking message as delivered for $receiverId")
+        if (receiverId == null) return
+        Log.d("Status", "Marking message as delivered for $receiverId")
 
-        messagesRef.child(receiverId).child(senderId).get().addOnSuccessListener { snapshot->
-            for(child in snapshot.children){
+        messagesRef.child(receiverId).child(senderId).get().addOnSuccessListener { snapshot ->
+            for (child in snapshot.children) {
                 val message = child.getValue(Message::class.java)
-                if(message != null &&
-                    message.status == MessageStatus.SENT){
-                    Log.d("Status","Reached inside if block for $receiverId")
+                if (message != null &&
+                    message.status == MessageStatus.SENT
+                ) {
+                    Log.d("Status", "Reached inside if block for $receiverId")
                     child.ref.child("status").setValue(MessageStatus.DELIVERED)
                 }
             }
@@ -186,7 +182,7 @@ class ChatViewModel @Inject constructor(
                 for (child in snapshot.children) {
                     val message = child.getValue(Message::class.java)
                     if (message != null) {
-                        Log.d("Status","inside of if block of viewed one with $receiverId")
+                        Log.d("Status", "inside of if block of viewed one with $receiverId")
                         child.ref.child("status").setValue(MessageStatus.VIEWED)
                     }
                 }
@@ -195,10 +191,10 @@ class ChatViewModel @Inject constructor(
 
 
     // Fetch all messages in a conversation
-    fun loadMessages(receiverPhoneNo: String,callback:(List<Message>)->Unit) {
-        val senderId = currentUserId?:return
+    fun loadMessages(receiverPhoneNo: String, callback: (List<Message>) -> Unit) {
+        val senderId = currentUserId ?: return
         val receiverId = getReceiverIdByPhoneNo(receiverPhoneNo) ?: return
-        Log.d("Status","marking messages as viewed for $receiverId")
+        Log.d("Status", "marking messages as viewed for $receiverId")
 
         messagesRef.child(senderId).child(receiverId)
             .addValueEventListener(object : ValueEventListener {
@@ -221,13 +217,13 @@ class ChatViewModel @Inject constructor(
 
     }
 
-    private fun getAllContacts(){
+    private fun getAllContacts() {
         viewModelScope.launch {
-            usersRef.addValueEventListener(object :ValueEventListener{
+            usersRef.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val users = mutableListOf<UserProfile>()
-                    for(child in snapshot.children){
-                        Log.d("ChatViewModel","child is $child")
+                    for (child in snapshot.children) {
+                        Log.d("ChatViewModel", "child is $child")
                         val user = child.getValue(FirebaseUserProfile::class.java)
                         user?.toUserProfile()?.let {
                             users.add(it)
@@ -235,7 +231,7 @@ class ChatViewModel @Inject constructor(
 
                     }
                     _allUsers.value = users.sortedBy { it.name }
-                    Log.d("ChatViewModel","all contacts are ${_allUsers.value}")
+                    Log.d("ChatViewModel", "all contacts are ${_allUsers.value}")
                     currentUserProfile = _allUsers.value.firstOrNull { it.userId == currentUserId }
                 }
 
@@ -249,7 +245,7 @@ class ChatViewModel @Inject constructor(
 
     fun getUnseenMessageCount(receiverId: String?, onResult: (Int) -> Unit) {
         if (currentUserId == null) return
-        if(receiverId == null) return
+        if (receiverId == null) return
         var count by mutableStateOf(0)
         messagesRef.child(currentUserId).child(receiverId)
             .addValueEventListener(object : ValueEventListener {
@@ -270,23 +266,7 @@ class ChatViewModel @Inject constructor(
             })
     }
 
-    fun convertBitmapToBase64(bitmap: Bitmap): String {
-        val byteArrayOutputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
-        val byteArray = byteArrayOutputStream.toByteArray()
-        return Base64.encodeToString(byteArray, Base64.DEFAULT)
-    }
-
-    fun decodeBase64ToBitmap(base64Image: String): Bitmap? {
-        return try {
-            val decodedByte = Base64.decode(base64Image, Base64.DEFAULT)
-            BitmapFactory.decodeByteArray(decodedByte, 0, decodedByte.size)
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun getReceiverIdByPhoneNo(receiverPhoneNo: String):String?{
+    private fun getReceiverIdByPhoneNo(receiverPhoneNo: String): String? {
         val receiver = _allUsers.value.firstOrNull { it.phoneNo == receiverPhoneNo }
         return receiver?.userId
     }

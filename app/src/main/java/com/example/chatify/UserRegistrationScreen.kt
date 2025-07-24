@@ -79,7 +79,7 @@ fun UserRegistrationScreen(
     var name by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
 
-    var uri by remember { mutableStateOf<Uri?>(null) }
+//    var uri by remember { mutableStateOf<Uri?>(null) }
     var profileBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
     val context = LocalContext.current
@@ -87,15 +87,15 @@ fun UserRegistrationScreen(
         val sharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         PreferencesManager(sharedPreferences)
     }
-    val phoneNo = preferencesManager.getString(PHONE_NO,"") ?: ""
+    val phoneNo = preferencesManager.getString(PHONE_NO, "") ?: ""
 
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia(),
-        onResult = {
-            uri = it
-            profileBitmap = MediaStore.Images.Media.getBitmap(context.contentResolver,it)
-        }
-    )
+//    val launcher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.PickVisualMedia(),
+//        onResult = {
+//            uri = it
+//            profileBitmap = MediaStore.Images.Media.getBitmap(context.contentResolver,it)
+//        }
+//    )
 
 
     LaunchedEffect(authState) {
@@ -124,31 +124,35 @@ fun UserRegistrationScreen(
     ) {
         val defaultBitmap = ImageBitmap.imageResource(R.drawable.profile_placeholder)
         Spacer(modifier=Modifier.height(64.dp))
-        Box(contentAlignment = Alignment.BottomEnd,modifier = modifier.size(140.dp)){
-            Image(
-                bitmap = profileBitmap?.asImageBitmap() ?: defaultBitmap,
-                contentScale = ContentScale.Crop,
-                contentDescription = null,
-                modifier = modifier
-                    .clip(CircleShape)
-                    .size(140.dp)
-            )
-            IconButton(
-                onClick = {
-                    launcher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                },
-                modifier = Modifier
-                    .offset(x = (-4).dp, y = (-2).dp)
-                    .size(32.dp)
-                    .background(color = PastelPurple, shape = CircleShape)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = null,
-                    tint = RichCharcoal
-                )
-            }
+        EditableProfileImage {
+            profileBitmap = it
         }
+
+//        Box(contentAlignment = Alignment.BottomEnd,modifier = modifier.size(140.dp)){
+//            Image(
+//                bitmap = profileBitmap?.asImageBitmap() ?: defaultBitmap,
+//                contentScale = ContentScale.Crop,
+//                contentDescription = null,
+//                modifier = modifier
+//                    .clip(CircleShape)
+//                    .size(140.dp)
+//            )
+//            IconButton(
+//                onClick = {
+//                    launcher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+//                },
+//                modifier = Modifier
+//                    .offset(x = (-4).dp, y = (-2).dp)
+//                    .size(32.dp)
+//                    .background(color = PastelPurple, shape = CircleShape)
+//            ) {
+//                Icon(
+//                    imageVector = Icons.Default.Edit,
+//                    contentDescription = null,
+//                    tint = RichCharcoal
+//                )
+//            }
+//        }
 
 
         Spacer(modifier.height(32.dp))
@@ -221,5 +225,60 @@ fun UserRegistrationScreen(
             }
         }
 
+    }
+}
+
+@Composable
+fun EditableProfileImage(
+    modifier: Modifier = Modifier,
+    initialBitmap: Bitmap? = null,
+    onImageChanged: (Bitmap) -> Unit
+) {
+    val context = LocalContext.current
+    var uri by remember { mutableStateOf<Uri?>(null) }
+    var profileBitmap by remember { mutableStateOf(initialBitmap) }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { selectedUri ->
+        uri = selectedUri
+        selectedUri?.let {
+            val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, it)
+            profileBitmap = bitmap
+            onImageChanged(bitmap)
+        }
+    }
+
+    val defaultBitmap = ImageBitmap.imageResource(R.drawable.profile_placeholder)
+
+    Box(
+        contentAlignment = Alignment.BottomEnd,
+        modifier = modifier.size(140.dp)
+    ) {
+        Image(
+            bitmap = profileBitmap?.asImageBitmap() ?: defaultBitmap,
+            contentScale = ContentScale.Crop,
+            contentDescription = null,
+            modifier = Modifier
+                .clip(CircleShape)
+                .size(140.dp)
+        )
+        IconButton(
+            onClick = {
+                launcher.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                )
+            },
+            modifier = Modifier
+                .offset(x = (-4).dp, y = (-2).dp)
+                .size(32.dp)
+                .background(color = PastelPurple, shape = CircleShape)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Edit,
+                contentDescription = null,
+                tint = RichCharcoal
+            )
+        }
     }
 }

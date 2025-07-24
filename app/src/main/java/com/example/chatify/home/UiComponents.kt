@@ -178,7 +178,7 @@ fun BottomNavigationBarWithPager(pagerState: PagerState, tabs: List<BottomTab>) 
                     },
                     icon = {
                         Icon(
-                            imageVector = screen.icon,
+                            imageVector = if(pagerState.currentPage==index) screen.selectedIcon else screen.defaultIcon,
                             contentDescription = screen.title,
                             modifier = Modifier.size(30.dp)
                         )

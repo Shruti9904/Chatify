@@ -95,7 +95,7 @@ fun HomeScreen(navController: NavController){
         ) { page ->
             when (tabs[page]) {
                 BottomTab.Chats-> ChatsScreen(chatViewModel,navController)
-                BottomTab.Profile -> ProfileScreen()
+                BottomTab.Profile -> ProfileScreen(navController)
             }
         }
     }
