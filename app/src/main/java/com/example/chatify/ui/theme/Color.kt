@@ -14,6 +14,12 @@ val Pink40 = Color(0xFF7D5260)
 val Lavender = Color(0xFF6a5bc2)
 val LightLavender = Color(0xFFE8E6FC)
 val SoftPeach = Color(0xFFFFF0E5)
+val PetalPink = Color(0xFFFCD6DF)
+val CardPink = Color(0xFFF9D3E3) // RoseBlush
+val CherryPink = Color(0xFFE86A92)
+val BoldBlush = Color(0xFFF48FB1)
+val RosePink = Color(0xFFD94F70)
+val OrchidPink = Color(0xFFEC6FBC)
 
 val DeepLavender = Color(0xFF5946B2)         // Slightly darker than Lavender
 val PastelPurple = Color(0xFFD3CCF5)         // Soft fill or background purple

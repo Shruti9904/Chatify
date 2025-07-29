@@ -6,26 +6,23 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.chatify.home.BottomNavigationBarWithPager
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.example.chatify.home.BottomNavigationBar
 import com.example.chatify.home.BottomTab
-import com.example.chatify.home.ChatsScreen
+import com.example.chatify.home.chats.ChatsScreen
 import com.example.chatify.home.FloatingButton
 import com.example.chatify.home.TopWhatsappBar
-import com.example.chatify.home.UpdatesScreen
+import com.example.chatify.home.chats.ChatViewModel
+import com.example.chatify.home.profile.ProfileScreen
 import com.example.chatify.ui.theme.ChatifyTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -44,60 +41,48 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-
 @Composable
-fun HomeScreen(navController: NavController){
-    val chatViewModel : ChatViewModel = hiltViewModel()
-    val tabs = listOf(
-        BottomTab.Chats,
-        BottomTab.Profile
-    )
-    val pagerState = rememberPagerState(
-        initialPage = 0,
-        pageCount = { 2 }
-    )
-    var currentPage by remember { mutableStateOf<BottomTab>(BottomTab.Chats) }
+fun HomeScreen(parentNavController: NavController) {
+    val chatViewModel: ChatViewModel = hiltViewModel()
+    val bottomNavController = rememberNavController()
 
-    LaunchedEffect(pagerState.currentPage) {
-        currentPage = tabs[pagerState.currentPage]
-    }
+    val currentRoute by bottomNavController.currentBackStackEntryAsState()
+    val currentScreen = currentRoute?.destination?.route
 
     Scaffold(
-        bottomBar = {
-            BottomNavigationBarWithPager(pagerState, tabs)
-        },
         topBar = {
-            TopWhatsappBar(currentPage, onSearch = { searchQuery ->
-                when (currentPage) {
-                    is BottomTab.Chats -> {
-                        chatViewModel.searchUserByPhoneNo(searchQuery)
-                    }
-
-                    else -> {
-
-                    }
+            when (currentScreen) {
+                "chats" -> TopWhatsappBar(BottomTab.Chats) {
+                    chatViewModel.searchChats(it)
                 }
-            })
+                "profile" -> TopWhatsappBar(BottomTab.Profile){}
+                else -> {}
+            }
+        },
+        bottomBar = {
+            BottomNavigationBar(bottomNavController)
         },
         floatingActionButton = {
-            if(currentPage== BottomTab.Chats){
-                FloatingButton{
-                    navController.navigate(Screen.ContactsScreen.route)
+            if (currentScreen == "chats") {
+                FloatingButton {
+                    parentNavController.navigate(Screen.ContactsScreen.route)
                 }
             }
         }
-    ) { innerPadding->
-
-        HorizontalPager(
-            state = pagerState,
-            contentPadding = innerPadding,
-            modifier = Modifier.fillMaxSize()
-        ) { page ->
-            when (tabs[page]) {
-                BottomTab.Chats-> ChatsScreen(chatViewModel,navController)
-                BottomTab.Profile -> ProfileScreen(navController)
+    ) { innerPadding ->
+        NavHost(
+            navController = bottomNavController,
+            startDestination = "chats",
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            composable("chats") {
+                ChatsScreen(chatViewModel, parentNavController)
+            }
+            composable("profile") {
+                ProfileScreen(parentNavController)
             }
         }
     }
 }
+
 

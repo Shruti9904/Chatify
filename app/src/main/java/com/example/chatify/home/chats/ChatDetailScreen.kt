@@ -1,4 +1,4 @@
-package com.example.chatify.home
+package com.example.chatify.home.chats
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -58,11 +58,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.chatify.ChatViewModel
-import com.example.chatify.Message
-import com.example.chatify.MessageStatus
 import com.example.chatify.R
-import com.example.chatify.decodeBase64ToBitmap
+import com.example.chatify.home.profile.decodeBase64ToBitmap
 import com.example.chatify.ui.theme.Lavender
 import com.example.chatify.ui.theme.LightLavender
 import com.example.chatify.ui.theme.RichCharcoal
@@ -78,8 +75,8 @@ fun ChatDetailScreen(
     viewModel: ChatViewModel = hiltViewModel(),
     innerPaddingValues: PaddingValues
 ) {
-    val allUsers by viewModel.allUsers.collectAsState()
-    val user = allUsers.firstOrNull { it.userId == userId }
+//    val allUsers by viewModel.allUsers.collectAsState()
+    val user = viewModel.uiState.contacts.firstOrNull { it.userId == userId }
     val name = user?.name ?: "Unknown"
     val profileString = user?.profileImage
     val receiverPhoneNo = user?.phoneNo
@@ -99,14 +96,13 @@ fun ChatDetailScreen(
     Box(modifier = Modifier.fillMaxSize().background(Lavender).padding(innerPaddingValues)){
         Scaffold(
             modifier = Modifier
-//                .padding(innerPaddingValues)
                 .fillMaxWidth(),
             containerColor = Lavender,
             topBar = {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp)
+                        .height(60.dp)
                         .background(Lavender),
                     contentAlignment = Alignment.CenterStart
                 ) {

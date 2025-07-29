@@ -1,4 +1,4 @@
-package com.example.chatify
+package com.example.chatify.home.profile
 
 data class UserProfile(
     val name: String = "",
@@ -15,7 +15,7 @@ data class FirebaseUserProfile(
     val profileImage: String? = null,
     val status: String? = null
 ){
-    fun toUserProfile():UserProfile{
+    fun toUserProfile(): UserProfile {
         return UserProfile(
             userId = userId?:"",
             name = name?:"New User",

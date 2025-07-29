@@ -1,4 +1,4 @@
-package com.example.chatify
+package com.example.chatify.home.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,11 +12,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -33,15 +36,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.chatify.Screen
+import com.example.chatify.auth.EditableProfileImage
+import com.example.chatify.auth.PhoneAuthViewModel
+import com.example.chatify.ui.theme.DustyViolet
 import com.example.chatify.ui.theme.Lavender
+import com.example.chatify.ui.theme.RichCharcoal
 import com.example.chatify.ui.theme.SoftLilac
-import com.example.chatify.ui.theme.SoftMauve
 import java.util.Locale
 
 @Composable
@@ -75,7 +81,7 @@ fun ProfileScreen(navController: NavController) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.Gray)
+//                .background(Color.Gray)
                 .padding(vertical = 20.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -88,68 +94,75 @@ fun ProfileScreen(navController: NavController) {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        ProfileInfoItem(
-            label = ProfileUpdateType.NAME.name,
-            text = userProfile!!.name,
-            isEditing = editingLabel == ProfileUpdateType.NAME.name,
-            onEditClick = { editingLabel = ProfileUpdateType.NAME.name },
-            onDone = {
-                userProfileViewModel.updateUserProfile(ProfileUpdateType.NAME, it)
-                editingLabel = null
-            }
-        )
+        Card (
+            modifier = Modifier.fillMaxSize(),
+            colors = CardDefaults.cardColors(containerColor = DustyViolet, contentColor = Color.White),
+            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
 
-        ProfileInfoItem(
-            label = ProfileUpdateType.STATUS.name,
-            text = userProfile!!.status ?: "Hey there! I am using Chatify",
-            isEditing = editingLabel == ProfileUpdateType.STATUS.name,
-            onEditClick = { editingLabel = ProfileUpdateType.STATUS.name },
-            onDone = {
-                userProfileViewModel.updateUserProfile(ProfileUpdateType.STATUS, it)
-                editingLabel = null
-            }
-        )
-        ProfileInfoItem(
-            label = ProfileUpdateType.PHONE.name,
-            text = userProfile!!.phoneNo,
-            isEditing = false,
-            onEditClick = { },
-            onDone = {
-                editingLabel = null
-            }
-        )
-
-        Button(
-            onClick = {
-                phoneAuthViewModel.signOut()
-                navController.navigate(Screen.AuthScreen.route) {
-                    popUpTo(Screen.HomeScreen.route) {
-                        inclusive = true
-                    }
+        ){
+            ProfileInfoItem(
+                label = ProfileUpdateType.NAME.name,
+                text = userProfile!!.name,
+                isEditing = editingLabel == ProfileUpdateType.NAME.name,
+                onEditClick = { editingLabel = ProfileUpdateType.NAME.name },
+                onDone = {
+                    userProfileViewModel.updateUserProfile(ProfileUpdateType.NAME, it)
+                    editingLabel = null
                 }
-            },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.DarkGray,
-                contentColor = Color.White
-            ),
-            modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp)
-        ) {
+            )
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically
+            ProfileInfoItem(
+                label = ProfileUpdateType.STATUS.name,
+                text = userProfile!!.status ?: "Hey there! I am using Chatify",
+                isEditing = editingLabel == ProfileUpdateType.STATUS.name,
+                onEditClick = { editingLabel = ProfileUpdateType.STATUS.name },
+                onDone = {
+                    userProfileViewModel.updateUserProfile(ProfileUpdateType.STATUS, it)
+                    editingLabel = null
+                }
+            )
+            ProfileInfoItem(
+                label = ProfileUpdateType.PHONE.name,
+                text = userProfile!!.phoneNo.take(3) + " " + userProfile!!.phoneNo.substring(3),
+                isEditing = false,
+                onEditClick = { },
+                onDone = {
+                    editingLabel = null
+                }
+            )
+
+            Button(
+                onClick = {
+                    phoneAuthViewModel.signOut()
+                    navController.navigate(Screen.AuthScreen.route) {
+                        popUpTo(Screen.HomeScreen.route) {
+                            inclusive = true
+                        }
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.DarkGray,
+                    contentColor = Color.White
+                ),
+                modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp)
             ) {
 
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Logout,
-                    contentDescription = "logout",
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(text = "Logout", fontSize = 14.sp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Logout,
+                        contentDescription = "logout",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(text = "Logout", fontSize = 14.sp)
+
+                }
 
             }
-
         }
 
 
@@ -212,10 +225,12 @@ fun ProfileInfoItem(
                 Box(modifier = Modifier.weight(0.3f).padding(start = 8.dp, end = 4.dp)) {
                     Text(
                         text = label.uppercase(Locale.ROOT),
-                        color = Color.Gray,
-                        fontSize = 14.sp
+                        color = RichCharcoal,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
+                Spacer(modifier=Modifier.width(8.dp))
                 Box(
                     modifier = Modifier.weight(1f),
                     contentAlignment = Alignment.CenterStart
@@ -233,6 +248,6 @@ fun ProfileInfoItem(
         }
 
         Spacer(modifier = Modifier.height(8.dp))
-        HorizontalDivider(color = SoftMauve, thickness = 1.5.dp)
+        HorizontalDivider(color = RichCharcoal, thickness = 0.5.dp)
     }
 }

@@ -1,15 +1,20 @@
-package com.example.chatify
+package com.example.chatify.auth
 
 import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.util.Base64
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.example.chatify.home.profile.FirebaseUserProfile
+import com.example.chatify.IS_LOGGED_IN
+import com.example.chatify.PHONE_NO
+import com.example.chatify.PreferencesManager
+import com.example.chatify.USER_ID
+import com.example.chatify.home.profile.UserProfile
+import com.example.chatify.home.profile.convertBitmapToBase64
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
@@ -22,7 +27,6 @@ import com.google.firebase.database.ValueEventListener
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import java.io.ByteArrayOutputStream
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 

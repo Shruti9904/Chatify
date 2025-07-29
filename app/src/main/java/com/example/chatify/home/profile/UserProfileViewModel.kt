@@ -1,4 +1,4 @@
-package com.example.chatify
+package com.example.chatify.home.profile
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -58,7 +58,7 @@ class UserProfileViewModel @Inject constructor(
         })
     }
 
-    fun updateUserProfile(profileUpdateType: ProfileUpdateType,newValue:String){
+    fun updateUserProfile(profileUpdateType: ProfileUpdateType, newValue:String){
         if(currentUserId==null) return
         userRef.child(currentUserId).child(profileUpdateType.key).setValue(newValue).addOnSuccessListener {
             Log.d("Update","success")

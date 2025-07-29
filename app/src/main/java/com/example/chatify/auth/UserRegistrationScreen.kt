@@ -1,9 +1,8 @@
-package com.example.chatify
+package com.example.chatify.auth
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -31,19 +30,14 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -57,11 +51,12 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.imageResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
-import com.example.chatify.ui.theme.DustyRose
+import com.example.chatify.PHONE_NO
+import com.example.chatify.PreferencesManager
+import com.example.chatify.R
+import com.example.chatify.Screen
 import com.example.chatify.ui.theme.Lavender
 import com.example.chatify.ui.theme.PastelPurple
 import com.example.chatify.ui.theme.RichCharcoal
@@ -253,7 +248,7 @@ fun EditableProfileImage(
 
     Box(
         contentAlignment = Alignment.BottomEnd,
-        modifier = modifier.size(140.dp)
+        modifier = modifier.size(150.dp)
     ) {
         Image(
             bitmap = profileBitmap?.asImageBitmap() ?: defaultBitmap,
@@ -261,7 +256,7 @@ fun EditableProfileImage(
             contentDescription = null,
             modifier = Modifier
                 .clip(CircleShape)
-                .size(140.dp)
+                .size(150.dp)
         )
         IconButton(
             onClick = {

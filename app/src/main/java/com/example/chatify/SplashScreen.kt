@@ -16,6 +16,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.chatify.auth.PhoneAuthViewModel
 import com.example.chatify.ui.theme.Lavender
 import kotlinx.coroutines.delay
 

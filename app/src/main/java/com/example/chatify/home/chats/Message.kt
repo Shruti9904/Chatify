@@ -1,4 +1,4 @@
-package com.example.chatify
+package com.example.chatify.home.chats
 
 data class Message(
     val senderId : String? = null,

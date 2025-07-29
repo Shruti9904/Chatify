@@ -1,4 +1,4 @@
-package com.example.chatify
+package com.example.chatify.auth
 
 import android.util.Log
 import android.widget.Toast
@@ -45,6 +45,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.chatify.R
+import com.example.chatify.Screen
 import com.example.chatify.ui.theme.Lavender
 import com.example.chatify.ui.theme.RichCharcoal
 import com.example.chatify.ui.theme.SoftGray
@@ -174,7 +176,7 @@ fun AuthScreen(
                 }
             )
         }
-        is AuthState.Loading->{
+        is AuthState.Loading ->{
             Box(contentAlignment = Alignment.Center,
                 modifier = Modifier.fillMaxSize()){
                 CircularProgressIndicator()

@@ -1,4 +1,4 @@
-package com.example.chatify
+package com.example.chatify.auth
 
 import android.util.Log
 import androidx.compose.foundation.background

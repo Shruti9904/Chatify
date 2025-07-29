@@ -1,4 +1,4 @@
-package com.example.chatify.home
+package com.example.chatify.home.chats
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,62 +38,54 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.imageResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.chatify.Chat
-import com.example.chatify.ChatViewModel
 import com.example.chatify.R
 import com.example.chatify.Screen
-import com.example.chatify.decodeBase64ToBitmap
+import com.example.chatify.home.profile.decodeBase64ToBitmap
 import com.example.chatify.ui.theme.CoralAccent
-import com.example.chatify.ui.theme.Lavender
-import com.example.chatify.ui.theme.LightLavender
 import com.example.chatify.ui.theme.RichCharcoal
 import com.example.chatify.ui.theme.SoftLilac
+import kotlinx.coroutines.delay
 
 @Composable
 fun ChatsScreen(viewModel: ChatViewModel, navController: NavController) {
-    val chats = viewModel.chatList.collectAsState().value
+    val uiState = viewModel.uiState
+    val chatList = uiState.chats
+
     val defaultBitmap = ImageBitmap.imageResource(R.drawable.profile_placeholder).asAndroidBitmap()
-    val searchedChat = viewModel.searchedChat
 
-    if(chats.isEmpty()){
+    if (chatList.isEmpty()) {
         Box(
-            modifier=Modifier.fillMaxSize().background(SoftLilac),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(SoftLilac),
             contentAlignment = Alignment.Center
-        ){
-            Text(text="No chats yet.\n Start a conversation to see it here!",
-                textAlign = TextAlign.Center,
-                color = RichCharcoal)
-        }
-    }else{
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().background(SoftLilac)
         ) {
-            if (searchedChat != null) {
-                val profileBitmap =
-                    searchedChat.profile?.let { decodeBase64ToBitmap(it) } ?: defaultBitmap
-                item {
-                    SingleChatItem(searchedChat, profileBitmap,viewModel) {
-                        navController.navigate(Screen.ChatDetailScreen.route)
-                    }
-                }
-            } else {
 
-                items(chats.size) { index ->
-                    val chat = chats[index]
-                    val profileBitmap =
-                        chat.profile?.let { decodeBase64ToBitmap(it) } ?: defaultBitmap
-                    SingleChatItem(chat, profileBitmap,viewModel) {
-                        chat.userId?.let {
-                            navController.navigate(Screen.ChatDetailScreen.createRoute(chat.userId))
-                        }
+            Text(
+                text = "No chats yet.\n Start a conversation to see it here!",
+                textAlign = TextAlign.Center,
+                color = RichCharcoal
+            )
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(SoftLilac)
+        ) {
+            items(chatList.size) { index ->
+                val chat = chatList[index]
+                val profileBitmap =
+                    chat.profile?.let { decodeBase64ToBitmap(it) } ?: defaultBitmap
+                SingleChatItem(chat, profileBitmap, viewModel) {
+                    chat.userId?.let {
+                        navController.navigate(Screen.ChatDetailScreen.createRoute(chat.userId))
                     }
                 }
             }
@@ -101,21 +94,25 @@ fun ChatsScreen(viewModel: ChatViewModel, navController: NavController) {
     }
 
 
-
 }
 
 @Composable
-fun SingleChatItem(chat: Chat, bitmap: Bitmap, chatViewModel: ChatViewModel, onChatClick: () -> Unit) {
+fun SingleChatItem(
+    chat: Chat,
+    bitmap: Bitmap,
+    chatViewModel: ChatViewModel,
+    onChatClick: () -> Unit
+) {
     val currentUserId = chatViewModel.currentUserId
-    val name = if(chat.userId==currentUserId) "${chat.name} (You)" else chat.name ?: ""
+    val name = if (chat.userId == currentUserId) "${chat.name} (You)" else chat.name ?: ""
     val message = chat.lastMessage ?: ""
     val time = chat.time ?: "--:--"
     var unseenCount by remember { mutableStateOf(0) }
 
     LaunchedEffect(chat) {
-       chatViewModel.getUnseenMessageCount(receiverId = chat.userId){
-           unseenCount = it
-       }
+        chatViewModel.getUnseenMessageCount(receiverId = chat.userId) {
+            unseenCount = it
+        }
     }
 
     Row(
@@ -137,7 +134,8 @@ fun SingleChatItem(chat: Chat, bitmap: Bitmap, chatViewModel: ChatViewModel, onC
         )
         Spacer(modifier = Modifier.width(12.dp))
         Column(
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth(0.7f)
         ) {
             Text(
                 text = name,
@@ -169,13 +167,12 @@ fun SingleChatItem(chat: Chat, bitmap: Bitmap, chatViewModel: ChatViewModel, onC
             Text(
                 text = time,
                 modifier = Modifier
-                    .alpha(0.7f)
-                ,
+                    .alpha(0.7f),
                 textAlign = TextAlign.End,
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.DarkGray
             )
-            if(unseenCount>0){
+            if (unseenCount > 0) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Box(
                     modifier = Modifier

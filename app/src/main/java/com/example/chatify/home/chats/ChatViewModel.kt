@@ -1,4 +1,4 @@
-package com.example.chatify
+package com.example.chatify.home.chats
 
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -6,12 +6,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.chatify.home.profile.FirebaseUserProfile
+import com.example.chatify.home.profile.UserProfile
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +30,11 @@ enum class MessageStatus{
     VIEWED
 }
 
+data class ChatsUiState(
+    var chats: List<Chat> = emptyList(),
+    var contacts: List<UserProfile> = emptyList(),
+)
+
 @HiltViewModel
 class ChatViewModel @Inject constructor(
     private val auth: FirebaseAuth,
@@ -40,44 +46,46 @@ class ChatViewModel @Inject constructor(
     private val chatsRef = database.getReference("chats")
     private val messagesRef = database.getReference("messages")
 
-    private val _chatList = MutableStateFlow<List<Chat>>(emptyList())
-    val chatList: StateFlow<List<Chat>> = _chatList.asStateFlow()
-
-    private val _allUsers = MutableStateFlow<List<UserProfile>>(emptyList())
-    val allUsers: StateFlow<List<UserProfile>> = _allUsers
-
+    var uiState by mutableStateOf(ChatsUiState())
     var currentUserProfile by mutableStateOf<UserProfile?>(null)
-    var searchedChat by mutableStateOf<Chat?>(null)
-
+    private var allChats: List<Chat> = emptyList()
+    private var allContacts :List<UserProfile> = emptyList()
 
     init {
-        getAllContacts()
         loadUserChats()
+        getAllContacts()
     }
 
     private fun loadUserChats() {
         if (currentUserId == null) return
-
         chatsRef.child(currentUserId).addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val chats = mutableListOf<Chat>()
+                    if (!snapshot.exists()) {
+                        uiState= uiState.copy(chats = emptyList())
+                        return
+                    }
+
                     for (child in snapshot.children) {
                         val chat = child.getValue(Chat::class.java)
                         chat?.let {
                             chats.add(it)
-                            markMessagesAsDelivered(it.userId)
+                            it.userId?.let { uid ->
+                                markMessagesAsDelivered(uid)
+                            }
                         }
                     }
-                    _chatList.value = chats
+                    allChats = chats
+                    uiState= uiState.copy(chats = chats)
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    _chatList.value = emptyList()
+                    uiState= uiState.copy(chats = emptyList())
                 }
             })
     }
 
-    fun addChat(receiverUserProfile: UserProfile,messageText: String) {
+    fun addChat(receiverUserProfile: UserProfile, messageText: String) {
         if(currentUserId==null) return
         val currentTime = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
         val receiverChat = Chat(
@@ -90,7 +98,7 @@ class ChatViewModel @Inject constructor(
             time = currentTime
         )
 
-        val receiverId = receiverUserProfile.userId ?: return
+        val receiverId = receiverUserProfile.userId
 
         val senderChat = Chat(
             userId = currentUserId,
@@ -107,32 +115,31 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    // Search a user by phone number
-    fun searchUserByPhoneNo(phoneNo: String) {
-        if (currentUserId == null) return
-        usersRef.orderByChild("phoneNo").equalTo(phoneNo)
-            .addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    if (snapshot.exists()) {
-                        val user = snapshot.getValue(FirebaseUserProfile::class.java)
-                        searchedChat = user?.let {
-                            Chat(
-                                name = it.name,
-                                phoneNo = it.phoneNo,
-                                userId = it.userId,
-                                profile = it.profileImage
-                            )
-                        }
-                    } else {
-                        searchedChat = null
-                    }
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    searchedChat = null
-                }
-            })
+    fun searchChats(query: String) {
+        val trimmed = query.trim().lowercase()
+        if (trimmed.isEmpty()) {
+            uiState = uiState.copy(chats = allChats)
+        } else {
+            val filtered = allChats.filter {
+                it.name?.lowercase()?.contains(trimmed) == true ||
+                        it.lastMessage?.lowercase()?.contains(trimmed) == true
+            }
+            uiState = uiState.copy(chats = filtered)
+        }
     }
+
+    fun searchContacts(query: String) {
+        val trimmed = query.trim().lowercase()
+        if (trimmed.isEmpty()) {
+            uiState = uiState.copy(contacts = allContacts)
+        } else {
+            val filtered = allContacts.filter {
+                it.name.lowercase().contains(trimmed)
+            }
+            uiState = uiState.copy(contacts = filtered)
+        }
+    }
+
 
     fun sendMessage(receiverPhoneNo: String, messageText: String) {
         val senderId = currentUserId ?: return
@@ -230,9 +237,9 @@ class ChatViewModel @Inject constructor(
                         }
 
                     }
-                    _allUsers.value = users.sortedBy { it.name }
-                    Log.d("ChatViewModel", "all contacts are ${_allUsers.value}")
-                    currentUserProfile = _allUsers.value.firstOrNull { it.userId == currentUserId }
+                    allContacts = users.sortedBy { it.name }
+                    uiState= uiState.copy(contacts = users.sortedBy { it.name })
+                    currentUserProfile = users.firstOrNull { it.userId == currentUserId }
                 }
 
                 override fun onCancelled(error: DatabaseError) {
@@ -267,7 +274,7 @@ class ChatViewModel @Inject constructor(
     }
 
     private fun getReceiverIdByPhoneNo(receiverPhoneNo: String): String? {
-        val receiver = _allUsers.value.firstOrNull { it.phoneNo == receiverPhoneNo }
+        val receiver = allContacts.firstOrNull { it.phoneNo == receiverPhoneNo }
         return receiver?.userId
     }
 }
